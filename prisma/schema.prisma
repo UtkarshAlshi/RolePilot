@@ -1,0 +1,322 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ResumeParseStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum JobSourceType {
+  TEXT
+  URL
+}
+
+enum JobAnalysisRecommendation {
+  STRONG_APPLY
+  REASONABLE_APPLY
+  STRETCH_APPLY
+  SKIP
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum GeneratedApplicationStatus {
+  DRAFT
+  REVIEWED
+  APPROVED
+}
+
+enum ApplicationSectionType {
+  COVER_LETTER
+  WHY_ROLE
+  WHY_COMPANY
+  RECRUITER_MESSAGE
+  SHORT_ANSWER
+  RESUME_EMPHASIS
+}
+
+enum RemotePreference {
+  ONSITE
+  HYBRID
+  REMOTE
+  FLEXIBLE
+}
+
+enum EmploymentType {
+  FULL_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+model User {
+  id              String                 @id @default(cuid())
+  email           String                 @unique
+  name            String?
+  image           String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  profile         Profile?
+  resumes         Resume[]
+  targetCompanies TargetCompany[]
+  jobPostings     JobPosting[]
+  applications    GeneratedApplication[]
+
+  @@index([createdAt])
+}
+
+model Profile {
+  id                   String            @id @default(cuid())
+  userId               String            @unique
+  fullName             String?
+  email                String?
+  phone                String?
+  location             String?
+  linkedInUrl          String?
+  githubUrl            String?
+  portfolioUrl         String?
+  summary              String?
+  noticePeriod         String?
+  workAuthorization    String?
+  salaryExpectation    String?
+  relocationPreference Boolean?
+  startAvailability    String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experiences Experience[]
+  projects    Project[]
+  skills      Skill[]
+  educations  Education[]
+  preference  Preference?
+}
+
+model Experience {
+  id           String    @id @default(cuid())
+  profileId    String
+  company      String
+  title        String
+  startDate    DateTime?
+  endDate      DateTime?
+  isCurrent    Boolean   @default(false)
+  location     String?
+  description  String?
+  achievements Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  profileId   String
+  name        String
+  role        String?
+  description String?
+  techStack   Json?
+  link        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+model Skill {
+  id        String   @id @default(cuid())
+  profileId String
+  name      String
+  category  String?
+  level     String?
+  years     Decimal? @db.Decimal(4, 1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([name])
+}
+
+model Education {
+  id          String   @id @default(cuid())
+  profileId   String
+  institution String
+  degree      String?
+  field       String?
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+model Preference {
+  id                 String           @id @default(cuid())
+  profileId          String           @unique
+  preferredRoles     Json?
+  preferredLocations Json?
+  employmentTypes    EmploymentType[]
+  remotePreference   RemotePreference @default(FLEXIBLE)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model TargetCompany {
+  id          String   @id @default(cuid())
+  userId       String
+  companyName String
+  careersUrl  String?
+  notes       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([companyName])
+}
+
+model Resume {
+  id                String            @id @default(cuid())
+  userId            String
+  storageKey        String
+  fileName          String
+  mimeType          String
+  uploadedAt        DateTime          @default(now())
+  parseStatus       ResumeParseStatus @default(PENDING)
+  parseError        String?
+  rawText           String?
+  extractedJson     Json?
+  confidenceSummary Json?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, uploadedAt])
+}
+
+model JobPosting {
+  id               String       @id @default(cuid())
+  userId           String
+  sourceType       JobSourceType
+  sourceUrl        String?
+  rawText          String?
+  title            String?
+  companyName      String?
+  location         String?
+  responsibilities Json?
+  requirements     Json?
+  mustHaveSkills   Json?
+  niceToHaveSkills Json?
+  keywords         Json?
+  experienceMin    Int?
+  experienceMax    Int?
+  screeningQs      Json?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analyses     JobAnalysis[]
+  applications GeneratedApplication[]
+
+  @@unique([id, userId])
+  @@index([userId, createdAt])
+  @@index([companyName])
+  @@index([title])
+}
+
+model JobAnalysis {
+  id             String                    @id @default(cuid())
+  jobPostingId   String
+  matchScore     Int
+  recommendation JobAnalysisRecommendation
+  strengths      Json?
+  gaps           Json?
+  mustHaveMatch  Json?
+  niceToHaveFit  Json?
+  reasoning      String
+  confidence     ConfidenceLevel
+  createdAt      DateTime                  @default(now())
+
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostingId, createdAt])
+}
+
+model GeneratedApplication {
+  id                String                     @id @default(cuid())
+  userId            String
+  jobPostingId      String
+  status            GeneratedApplicationStatus @default(DRAFT)
+  tone              String?
+  groundingNotes    String?
+  overallConfidence ConfidenceLevel            @default(MEDIUM)
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPosting   JobPosting          @relation(fields: [jobPostingId, userId], references: [id, userId], onDelete: Cascade)
+  answers      ApplicationAnswer[]
+  draftVersions DraftVersion[]
+
+  @@index([userId, createdAt])
+  @@index([jobPostingId])
+}
+
+model ApplicationAnswer {
+  id                     String                 @id @default(cuid())
+  generatedApplicationId String
+  sectionType            ApplicationSectionType
+  content                String
+  confidence             ConfidenceLevel        @default(MEDIUM)
+  missingInfo            Json?
+  factSources            Json?
+  isUserEdited           Boolean                @default(false)
+  order                  Int                    @default(0)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  generatedApplication GeneratedApplication @relation(fields: [generatedApplicationId], references: [id], onDelete: Cascade)
+
+  @@unique([generatedApplicationId, sectionType, order])
+  @@index([generatedApplicationId])
+}
+
+model DraftVersion {
+  id                     String   @id @default(cuid())
+  generatedApplicationId String
+  version                Int
+  snapshotJson           Json
+  changeSummary          String?
+  createdAt              DateTime @default(now())
+
+  generatedApplication GeneratedApplication @relation(fields: [generatedApplicationId], references: [id], onDelete: Cascade)
+
+  @@unique([generatedApplicationId, version])
+  @@index([generatedApplicationId, createdAt])
+}
