@@ -137,7 +137,8 @@ export const applicationGenerationService = {
       status: input.status,
       company: input.company,
       dateFrom: input.dateFrom ? new Date(input.dateFrom) : undefined,
-      dateTo: input.dateTo ? new Date(input.dateTo) : undefined,
+      // Treat dateTo as inclusive end-of-day so UI date filters include the full selected date.
+      dateTo: input.dateTo ? new Date(`${input.dateTo}T23:59:59.999Z`) : undefined,
       limit: input.limit
     });
   }
