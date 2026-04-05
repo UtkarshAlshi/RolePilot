@@ -16,7 +16,7 @@ Request:
 
 Response:
 ```json
-{ "uploadUrl": "...", "storageKey": "resumes/user_123/1710000000-uuid-resume.pdf", "expiresIn": 900, "requiredHeaders": {"content-type": "application/pdf"}, "provider": "local" }
+{ "uploadUrl": "...", "method": "PUT", "storageKey": "resumes/user_123/1710000000-uuid-resume.pdf", "expiresIn": 900, "requiredHeaders": {"content-type": "application/pdf"}, "provider": "local" }
 ```
 
 ### POST `/api/resumes`

@@ -14,7 +14,11 @@ const envSchema = z.object({
   RESUME_UPLOAD_URL_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(900),
   RESUME_STORAGE_SIGNING_SECRET: z.string().min(16),
   ERROR_MONITOR_DSN: z.string().url().optional(),
-  OPENAI_API_KEY: z.string().min(20).optional(),
+  // Treat empty string as unset so fresh `.env` with OPENAI_API_KEY="" does not crash startup.
+  OPENAI_API_KEY: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().min(20).optional()
+  ),
   OPENAI_MODEL: z.string().min(1).default("gpt-4.1-mini")
 });
 
@@ -45,3 +49,4 @@ export const env = {
   ...parsed.data,
   AUTH_ALLOW_DEMO_LOGIN: parsed.data.AUTH_ALLOW_DEMO_LOGIN ?? parsed.data.NODE_ENV !== "production"
 };
+lib/logging.ts

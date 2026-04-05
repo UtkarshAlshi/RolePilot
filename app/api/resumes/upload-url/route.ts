@@ -30,6 +30,7 @@ export async function POST(request: Request) {
 
     return ok(requestId, {
       uploadUrl: target.uploadUrl,
+      method: target.method,
       storageKey: target.storageKey,
       expiresIn: target.expiresIn,
       requiredHeaders: target.requiredHeaders,
@@ -42,4 +43,3 @@ export async function POST(request: Request) {
     logError(requestId, "Failed to generate upload URL", { error: String(error) });
     return fail(requestId, "INTERNAL_ERROR", "Failed to generate upload URL", 500);
   }
-}

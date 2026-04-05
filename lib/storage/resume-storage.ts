@@ -15,6 +15,7 @@ export type UploadTarget = {
   provider: "local" | "s3";
   storageKey: string;
   uploadUrl: string;
+  method: "PUT" | "POST";
   expiresIn: number;
   requiredHeaders: Record<string, string>;
 };
@@ -33,6 +34,7 @@ export const resumeStorage = {
         provider: "s3",
         storageKey,
         uploadUrl: `${env.RESUME_STORAGE_BASE_URL}/${encodeURIComponent(storageKey)}?expiresAt=${encodeURIComponent(expiresAt)}&signature=${token}`,
+        method: "PUT",
         expiresIn,
         requiredHeaders: {
           "content-type": input.mimeType,
@@ -45,6 +47,7 @@ export const resumeStorage = {
       provider: "local",
       storageKey,
       uploadUrl: `${env.RESUME_STORAGE_BASE_URL}/${encodeURIComponent(storageKey)}`,
+      method: "PUT",
       expiresIn,
       requiredHeaders: {
         "content-type": input.mimeType

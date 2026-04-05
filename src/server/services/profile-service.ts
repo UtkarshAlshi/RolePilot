@@ -54,7 +54,11 @@ export const profileService = {
     };
   },
 
-  updateProfile: (userId: string, payload: Record<string, unknown>) => profileRepository.updateProfile(userId, payload),
+  async updateProfile(userId: string, payload: Record<string, unknown>) {
+    // First-write safety: ensure profile row exists before attempting update.
+    await profileRepository.getOrCreate(userId);
+    return profileRepository.updateProfile(userId, payload);
+  },
 
   async replaceExperiences(
     userId: string,
