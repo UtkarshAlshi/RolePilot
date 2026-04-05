@@ -49,4 +49,3 @@ export const env = {
   ...parsed.data,
   AUTH_ALLOW_DEMO_LOGIN: parsed.data.AUTH_ALLOW_DEMO_LOGIN ?? parsed.data.NODE_ENV !== "production"
 };
-lib/logging.ts

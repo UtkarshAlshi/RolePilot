@@ -43,3 +43,4 @@ export async function POST(request: Request) {
     logError(requestId, "Failed to generate upload URL", { error: String(error) });
     return fail(requestId, "INTERNAL_ERROR", "Failed to generate upload URL", 500);
   }
+}
